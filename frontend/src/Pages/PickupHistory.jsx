@@ -23,81 +23,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "./PickupHistory.css";
-
-const demoPickups = [
-  {
-    id: "SS-2026-4821",
-    date: "20 Sep 2026",
-    time: "9:00 AM – 12:00 PM",
-    createdAt: "19 Sep 2026",
-    address: "Patia, Bhubaneswar, Odisha",
-    city: "Bhubaneswar",
-    pincode: "751024",
-    weight: "5–10 kg",
-    status: "Finding Collector",
-    statusKey: "finding",
-    amount: null,
-    note: "Please call before arrival.",
-    collector: {
-      name: "A collector will be assigned",
-      phone: null,
-    },
-  },
-  {
-    id: "SS-2026-4716",
-    date: "12 Sep 2026",
-    time: "4:00 PM – 7:00 PM",
-    createdAt: "11 Sep 2026",
-    address: "Sahid Nagar, Bhubaneswar, Odisha",
-    city: "Bhubaneswar",
-    pincode: "751007",
-    weight: "10–20 kg",
-    status: "Completed",
-    statusKey: "completed",
-    amount: 1240,
-    note: "Scrap weighed and collected successfully.",
-    collector: {
-      name: "Ramesh Kumar",
-      phone: "+91 98XXXXXX21",
-    },
-  },
-  {
-    id: "SS-2026-4498",
-    date: "31 Aug 2026",
-    time: "10:00 AM – 1:00 PM",
-    createdAt: "30 Aug 2026",
-    address: "Jayadev Vihar, Bhubaneswar, Odisha",
-    city: "Bhubaneswar",
-    pincode: "751013",
-    weight: "0–5 kg",
-    status: "Completed",
-    statusKey: "completed",
-    amount: 410,
-    note: "Pickup completed without issues.",
-    collector: {
-      name: "Sanjay Das",
-      phone: "+91 97XXXXXX84",
-    },
-  },
-  {
-    id: "SS-2026-4210",
-    date: "17 Aug 2026",
-    time: "5:00 PM – 8:00 PM",
-    createdAt: "16 Aug 2026",
-    address: "Khandagiri, Bhubaneswar, Odisha",
-    city: "Bhubaneswar",
-    pincode: "751030",
-    weight: "20+ kg",
-    status: "Cancelled",
-    statusKey: "cancelled",
-    amount: null,
-    note: "Pickup cancelled before collector arrival.",
-    collector: {
-      name: "Not assigned",
-      phone: null,
-    },
-  },
-];
+import { getMyPickups } from "../api/pickup";
 
 const STATUS_STEPS = [
   { key: "submitted", label: "Request submitted" },
@@ -135,55 +61,101 @@ function readStoredPickups() {
   return [];
 }
 
+function formatTimeSlot(slot) {
+  const slots = {
+    morning: "9:00 AM – 12:00 PM",
+    afternoon: "12:00 PM – 3:00 PM",
+    evening: "4:00 PM – 7:00 PM",
+  };
+
+  return slots[slot] || slot || "Time not available";
+}
+
+function formatWeight(weight) {
+  const weights = {
+    "0-5": "0 – 5 kg",
+    "5-10": "5 – 10 kg",
+    "10-20": "10 – 20 kg",
+    "20+": "20+ kg",
+  };
+
+  return weights[weight] || weight || "Not specified";
+}
+
 function normalizePickup(item) {
-  const statusText = String(item?.status || item?.pickupStatus || "Finding Collector");
+  const statusText = String(
+    item?.status || "submitted"
+  );
+
   const lower = statusText.toLowerCase();
 
-  let statusKey = "finding";
-  if (lower.includes("complete")) statusKey = "completed";
-  else if (lower.includes("cancel")) statusKey = "cancelled";
-  else if (lower.includes("way") || lower.includes("arriv")) statusKey = "onway";
-  else if (lower.includes("scheduled")) statusKey = "scheduled";
-  else if (lower.includes("submit")) statusKey = "submitted";
+  let statusKey = "submitted";
+  let displayStatus = "Request Submitted";
+
+  if (lower === "finding_collector") {
+    statusKey = "finding";
+    displayStatus = "Finding Collector";
+  } else if (lower === "scheduled") {
+    statusKey = "scheduled";
+    displayStatus = "Pickup Scheduled";
+  } else if (lower === "on_the_way") {
+    statusKey = "onway";
+    displayStatus = "Collector On The Way";
+  } else if (lower === "completed") {
+    statusKey = "completed";
+    displayStatus = "Completed";
+  } else if (lower === "cancelled") {
+    statusKey = "cancelled";
+    displayStatus = "Cancelled";
+  } else if (lower === "submitted") {
+    statusKey = "submitted";
+    displayStatus = "Request Submitted";
+  }
 
   return {
-    id: item?.id || item?.requestId || `SS-${Date.now()}`,
-    date: item?.date || item?.pickupDate || "Date not available",
-    time: item?.time || item?.timeSlot || "Time not available",
-    createdAt: item?.createdAt || item?.requestedOn || item?.createdDate || "—",
-    address:
-      item?.address ||
-      item?.pickupAddress ||
-      item?.location ||
-      "Address not available",
+    id: item?.requestId || item?._id || "Unknown",
+
+    mongoId: item?._id,
+
+    date: item?.pickupDate || "Date not available",
+
+    time: formatTimeSlot(item?.timeSlot),
+
+    createdAt: item?.createdAt
+      ? new Intl.DateTimeFormat("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }).format(new Date(item.createdAt))
+      : "—",
+
+    address: item?.address || "Address not available",
+
     city: item?.city || "",
-    pincode: item?.pincode || item?.pinCode || "",
-    weight:
-      item?.weight ||
-      item?.scrapWeight ||
-      item?.quantity ||
-      item?.weightRange ||
-      "Not specified",
-    status: statusText,
+
+    pincode: item?.pincode || "",
+
+    weight: formatWeight(item?.weightRange),
+
+    status: displayStatus,
+
     statusKey,
+
     amount:
-      item?.amount ??
       item?.finalAmount ??
-      item?.estimatedAmount ??
       null,
+
     note:
-      item?.note ||
-      item?.landmark ||
-      item?.instructions ||
+      item?.notes ||
       "No additional notes.",
+
     collector: {
       name:
         item?.collector?.name ||
-        item?.collectorName ||
         "A collector will be assigned",
+
       phone:
         item?.collector?.phone ||
-        item?.collectorPhone ||
         null,
     },
   };
@@ -233,9 +205,8 @@ function MiniProgress({ pickup }) {
           <React.Fragment key={step.key}>
             <div className="ph-progress-step">
               <div
-                className={`ph-progress-dot ${
-                  done ? "done" : ""
-                } ${active ? "active" : ""}`}
+                className={`ph-progress-dot ${done ? "done" : ""
+                  } ${active ? "active" : ""}`}
               >
                 {done ? <CheckCircle2 size={13} /> : <span />}
               </div>
@@ -244,9 +215,8 @@ function MiniProgress({ pickup }) {
 
             {index !== STATUS_STEPS.length - 1 && (
               <div
-                className={`ph-progress-line ${
-                  index < activeIndex ? "filled" : ""
-                }`}
+                className={`ph-progress-line ${index < activeIndex ? "filled" : ""
+                  }`}
               />
             )}
           </React.Fragment>
@@ -388,31 +358,65 @@ function PickupHistory() {
   const [showCurrentOnly, setShowCurrentOnly] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedPickup, setSelectedPickup] = useState(null);
-  const [storedPickups, setStoredPickups] = useState([]);
+  const [pickups, setPickups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [openFilter, setOpenFilter] = useState(false);
 
+  const storedUser = useMemo(() => {
+    try {
+      return JSON.parse(
+        localStorage.getItem("user") || "null"
+      );
+    } catch {
+      return null;
+    }
+  }, []);
+
   const username =
-    localStorage.getItem("username") ||
-    localStorage.getItem("userName") ||
+    storedUser?.username ||
+    storedUser?.userName ||
     "User";
 
   useEffect(() => {
-    setStoredPickups(readStoredPickups());
+    const fetchPickups = async () => {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        setError("Please login to view your pickup history.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError("");
+
+        const result = await getMyPickups();
+
+        if (result.success) {
+          setPickups(result.pickups || []);
+        } else {
+          setError(result.message || "Unable to load pickup history.");
+        }
+      } catch (error) {
+        console.error("Pickup history error:", error);
+
+        const message =
+          error.response?.data?.message ||
+          "Unable to load pickup history.";
+
+        setError(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPickups();
   }, []);
-
   const allPickups = useMemo(() => {
-    const normalizedStored = storedPickups.map(normalizePickup);
-    const normalizedDemo = demoPickups.map(normalizePickup);
-
-    const combined = [...normalizedStored, ...normalizedDemo];
-    const unique = new Map();
-
-    for (const pickup of combined) {
-      if (!unique.has(pickup.id)) unique.set(pickup.id, pickup);
-    }
-
-    return Array.from(unique.values());
-  }, [storedPickups]);
+    return pickups.map(normalizePickup);
+  }, [pickups]);
 
   const currentPickup = useMemo(() => {
     return allPickups.find((pickup) =>
@@ -706,100 +710,118 @@ function PickupHistory() {
             </div>
           </div>
 
-          <div className="ph-records">
-            <AnimatePresence>
-              {filtered.map((pickup, index) => (
-                <motion.article
-                  key={pickup.id}
-                  className="ph-record"
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ delay: index * 0.04 }}
-                  whileHover={{ y: -3 }}
-                >
-                  <div className="ph-record-left">
-                    <div className="ph-record-icon">
-                      {pickup.statusKey === "completed" ? (
-                        <CheckCircle2 size={19} />
-                      ) : pickup.statusKey === "cancelled" ? (
-                        <X size={19} />
-                      ) : (
-                        <Truck size={19} />
-                      )}
-                    </div>
-
-                    <div className="ph-record-main">
-                      <div className="ph-record-topline">
-                        <strong>{pickup.id}</strong>
-                        <StatusPill pickup={pickup} />
-                      </div>
-
-                      <div className="ph-record-date">
-                        <CalendarDays size={14} />
-                        {pickup.date}
-                        <span>•</span>
-                        <Clock3 size={14} />
-                        {pickup.time}
-                      </div>
-
-                      <div className="ph-record-address">
-                        <MapPin size={14} />
-                        <span>{pickup.address}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="ph-record-middle">
-                    <span>Estimated scrap</span>
-                    <strong>{pickup.weight}</strong>
-                    <small>{pickup.collector.name}</small>
-                  </div>
-
-                  <div className="ph-record-value">
-                    <span>
-                      {pickup.statusKey === "completed"
-                        ? "Final amount"
-                        : "Status"}
-                    </span>
-
-                    <strong>
-                      {pickup.statusKey === "completed" && pickup.amount
-                        ? `₹${Number(pickup.amount).toLocaleString("en-IN")}`
-                        : pickup.status}
-                    </strong>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPickup(pickup)}
-                    >
-                      View
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                </motion.article>
-              ))}
-            </AnimatePresence>
-          </div>
-
-          {filtered.length === 0 && (
+          {loading ? (
             <div className="ph-empty">
-              <Search size={25} />
-              <h3>No pickup records found</h3>
+              <Truck size={25} />
+
+              <h3>Loading your pickups...</h3>
+
               <p>
-                Try another search or schedule a new pickup to start building
-                your history.
+                We're getting your pickup history from ScrapSmart.
               </p>
+            </div>
+          ) : error ? (
+            <div className="ph-empty">
+              <AlertCircle size={25} />
+
+              <h3>Unable to load history</h3>
+
+              <p>{error}</p>
+
               <button
                 type="button"
                 className="ph-primary"
-                onClick={() => navigate("/schedule-pickup")}
+                onClick={() => window.location.reload()}
               >
-                Schedule Pickup
-                <ArrowRight size={15} />
+                Try Again
               </button>
             </div>
+          ) : (
+            <>
+              <div className="ph-records">
+                <AnimatePresence>
+                  {filtered.map((pickup, index) => (
+                    <motion.article
+                      key={pickup.mongoId || pickup.id || index}
+                      className="ph-record"
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.25, delay: index * 0.03 }}
+                    >
+                      <div className="ph-record-top">
+                        <div>
+                          <span className="ph-request-id">{pickup.id}</span>
+                          <h3>{pickup.date}</h3>
+                          <p>
+                            <Clock3 size={14} />
+                            {pickup.time}
+                          </p>
+                        </div>
+
+                        <StatusPill pickup={pickup} />
+                      </div>
+
+                      <div className="ph-record-info">
+                        <div>
+                          <MapPin size={16} />
+                          <span>
+                            {pickup.address}
+                            {pickup.city ? `, ${pickup.city}` : ""}
+                            {pickup.pincode ? ` - ${pickup.pincode}` : ""}
+                          </span>
+                        </div>
+
+                        <div>
+                          <PackageCheck size={16} />
+                          <span>{pickup.weight}</span>
+                        </div>
+                      </div>
+
+                      <MiniProgress pickup={pickup} />
+
+                      <div className="ph-record-bottom">
+                        <span>Requested {pickup.createdAt}</span>
+
+                        <button
+                          type="button"
+                          className="ph-view-btn"
+                          onClick={() => setSelectedPickup(pickup)}
+                        >
+                          <Eye size={15} />
+                          View details
+                          <ArrowRight size={15} />
+                        </button>
+                      </div>
+                    </motion.article>
+                  ))}
+                </AnimatePresence>
+              </div>
+
+              {filtered.length === 0 && (
+                <div className="ph-empty">
+                  <Search size={25} />
+
+                  <h3>No pickup records found</h3>
+
+                  <p>
+                    Try another search or schedule a new pickup to start
+                    building your history.
+                  </p>
+
+                  <button
+                    type="button"
+                    className="ph-primary"
+                    onClick={() => navigate("/schedule-pickup")}
+                  >
+                    Schedule Pickup
+                    <ArrowRight size={15} />
+                  </button>
+                </div>
+              )}
+            </>
           )}
+
         </section>
 
         <section className="ph-bottom-note">
@@ -809,9 +831,8 @@ function PickupHistory() {
           <div>
             <strong>Your history stays organized.</strong>
             <p>
-              Once your backend is connected, this page can load real pickup
-              records from MongoDB and update the status as collectors accept,
-              start and complete each request.
+              Your pickup records are loaded directly from ScrapSmart and kept
+              organized by request, status, date and settlement details.
             </p>
           </div>
         </section>

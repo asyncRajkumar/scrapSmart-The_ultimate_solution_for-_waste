@@ -1345,3 +1345,428 @@
     width: 100%;
   }
 }
+
+/* =========================================================
+   PICKUP RECORDS - CLEAN LAYOUT OVERRIDE
+   ========================================================= */
+
+.ph-records {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ph-record {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 24px;
+  border: 1px solid rgba(20, 70, 50, 0.10);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.ph-record:hover {
+  transform: translateY(-2px);
+  border-color: rgba(35, 145, 88, 0.20);
+  box-shadow: 0 14px 35px rgba(20, 80, 55, 0.08);
+}
+
+
+/* -------------------------
+   TOP SECTION
+   ------------------------- */
+
+.ph-record-top {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.ph-record-top > div:first-child {
+  min-width: 0;
+}
+
+.ph-request-id {
+  display: inline-block;
+  margin-bottom: 8px;
+
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #27885b;
+}
+
+.ph-record-top h3 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 750;
+  color: #173c2c;
+}
+
+.ph-record-top p {
+  margin: 7px 0 0;
+  font-size: 14px;
+  color: #718178;
+}
+
+
+/* -------------------------
+   STATUS
+   ------------------------- */
+
+.ph-status {
+  flex-shrink: 0;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 8px 12px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ph-submitted {
+  color: #237b52;
+  background: rgba(42, 166, 102, 0.10);
+}
+
+.ph-finding {
+  color: #8a681b;
+  background: rgba(220, 173, 52, 0.12);
+}
+
+.ph-scheduled {
+  color: #28719a;
+  background: rgba(65, 151, 201, 0.11);
+}
+
+.ph-onway {
+  color: #7652a2;
+  background: rgba(135, 94, 185, 0.11);
+}
+
+.ph-completed {
+  color: #207a4f;
+  background: rgba(43, 165, 99, 0.12);
+}
+
+.ph-cancelled {
+  color: #b44a4a;
+  background: rgba(202, 75, 75, 0.10);
+}
+
+
+/* -------------------------
+   INFORMATION ROW
+   ------------------------- */
+
+.ph-record-info {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.45fr);
+  gap: 14px;
+}
+
+.ph-record-info > div {
+  min-width: 0;
+
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+
+  padding: 14px 16px;
+
+  border-radius: 14px;
+  background: #f7faf8;
+  border: 1px solid rgba(20, 70, 50, 0.07);
+
+  color: #26483a;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.ph-record-info svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #319567;
+}
+
+.ph-record-info span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+
+/* -------------------------
+   PROGRESS TRACKER
+   ------------------------- */
+
+.ph-record .ph-progress {
+  width: 100%;
+  min-width: 0;
+
+  display: flex;
+  align-items: flex-start;
+
+  padding: 4px 0 2px;
+
+  overflow: visible;
+}
+
+.ph-record .ph-progress-step {
+  flex: 0 1 auto;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+
+  text-align: center;
+}
+
+.ph-record .ph-progress-step > span {
+  max-width: 110px;
+
+  font-size: 10px;
+  line-height: 1.25;
+  font-weight: 600;
+
+  color: #9aa6a0;
+
+  white-space: normal;
+}
+
+.ph-record .ph-progress-step > span.done-label {
+  color: #315344;
+}
+
+.ph-record .ph-progress-dot {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: #f1f4f2;
+  border: 1px solid #dde5e0;
+
+  color: #a2aaa6;
+}
+
+.ph-record .ph-progress-dot.done {
+  background: #e7f5ed;
+  border-color: #bce4cd;
+  color: #2e9b63;
+}
+
+.ph-record .ph-progress-dot.active {
+  background: #2f9d65;
+  border-color: #2f9d65;
+  color: white;
+
+  box-shadow: 0 4px 12px rgba(47, 157, 101, 0.20);
+}
+
+.ph-record .ph-progress-line {
+  flex: 1 1 50px;
+
+  height: 2px;
+
+  margin: 13px 8px 0;
+
+  background: #e0e7e3;
+
+  min-width: 20px;
+}
+
+.ph-record .ph-progress-line.filled {
+  background: #7cc39b;
+}
+
+
+/* -------------------------
+   BOTTOM SECTION
+   ------------------------- */
+
+.ph-record-bottom {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+
+  padding-top: 4px;
+
+  border-top: 1px solid rgba(20, 70, 50, 0.07);
+}
+
+.ph-record-bottom > span {
+  font-size: 13px;
+  color: #7a8981;
+}
+
+.ph-view-btn {
+  flex-shrink: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  padding: 9px 14px;
+
+  border: 1px solid rgba(44, 140, 87, 0.16);
+  border-radius: 999px;
+
+  background: #f5faf7;
+  color: #277a50;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.ph-view-btn:hover {
+  background: #e9f7ef;
+  border-color: rgba(44, 140, 87, 0.28);
+  transform: translateX(2px);
+}
+
+
+/* -------------------------
+   CANCELLED
+   ------------------------- */
+
+.ph-cancelled-track {
+  width: 100%;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  padding: 12px 14px;
+
+  border-radius: 12px;
+
+  background: rgba(202, 75, 75, 0.06);
+  color: #a34d4d;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 850px) {
+  .ph-record {
+    padding: 20px;
+  }
+
+  .ph-record-info {
+    grid-template-columns: 1fr;
+  }
+
+  .ph-record .ph-progress-step > span {
+    max-width: 85px;
+    font-size: 9px;
+  }
+
+  .ph-record .ph-progress-line {
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+  .ph-record {
+    padding: 17px;
+    border-radius: 18px;
+    gap: 17px;
+  }
+
+  .ph-record-top {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ph-record-top h3 {
+    font-size: 18px;
+  }
+
+  .ph-status {
+    align-self: flex-start;
+  }
+
+  .ph-record-info {
+    grid-template-columns: 1fr;
+  }
+
+  .ph-record .ph-progress {
+    overflow-x: auto;
+    padding-bottom: 8px;
+
+    scrollbar-width: thin;
+  }
+
+  .ph-record .ph-progress-step {
+    flex: 0 0 80px;
+  }
+
+  .ph-record .ph-progress-step > span {
+    max-width: 78px;
+    font-size: 9px;
+  }
+
+  .ph-record .ph-progress-line {
+    flex: 0 0 24px;
+  }
+
+  .ph-record-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ph-view-btn {
+    width: 100%;
+  }
+}

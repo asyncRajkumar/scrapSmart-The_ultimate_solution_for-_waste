@@ -15,11 +15,11 @@ import {
   Recycle,
   Sparkles,
   Trophy,
-  UserRound,
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "./UserHome.css";
+import ProfileCard from "./ProfileCard";
 
 const services = [
   {
@@ -108,7 +108,7 @@ function getStoredUser() {
 function UserHome() {
   const navigate = useNavigate();
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   const user = useMemo(() => getStoredUser(), []);
   const username = user?.username || user?.userName || user?.name || "User";
@@ -128,6 +128,9 @@ function UserHome() {
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    localStorage.removeItem("userName");
+    setShowProfile(false);
     navigate("/");
   };
 
@@ -175,37 +178,17 @@ function UserHome() {
               <button
                 type="button"
                 className="profile-chip"
-                onClick={() => setProfileOpen((open) => !open)}
-                aria-expanded={profileOpen}
+                onClick={() => setShowProfile(true)}
+                aria-haspopup="dialog"
+                aria-expanded={showProfile}
               >
                 <span className="avatar">{initials}</span>
                 <span className="profile-copy">
                   <strong>{username}</strong>
                   <small>{email}</small>
                 </span>
-                <ChevronRight
-                  size={16}
-                  className={`profile-chevron ${profileOpen ? "rotate" : ""}`}
-                />
+                <ChevronRight size={16} className="profile-chevron" />
               </button>
-
-              {profileOpen && (
-                <motion.div
-                  className="profile-menu"
-                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.18 }}
-                >
-                  <button type="button" onClick={() => goTo("/profile")}>
-                    <UserRound size={16} />
-                    Profile
-                  </button>
-                  <button type="button" onClick={handleLogout}>
-                    <X size={16} />
-                    Sign out
-                  </button>
-                </motion.div>
-              )}
             </div>
 
             <button
@@ -325,6 +308,11 @@ function UserHome() {
           </motion.footer>
         </div>
       </motion.section>
+
+      <ProfileCard
+        open={showProfile}
+        onClose={() => setShowProfile(false)}
+      />
     </main>
   );
 }

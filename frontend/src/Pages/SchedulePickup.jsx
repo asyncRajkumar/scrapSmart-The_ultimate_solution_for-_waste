@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import "./SchedulePickup.css";
+import { createPickup } from "../api/pickup";
 
 const TIME_SLOTS = [
   { id: "morning", label: "Morning", time: "9:00 AM – 12:00 PM", icon: "☀" },
@@ -64,11 +65,6 @@ function getStoredUser() {
   }
 }
 
-function makeRequestId() {
-  const random = Math.floor(1000 + Math.random() * 9000);
-  return `SS-${new Date().getFullYear()}-${random}`;
-}
-
 function formatDate(dateString) {
   if (!dateString) return "—";
   return new Intl.DateTimeFormat("en-IN", {
@@ -86,6 +82,7 @@ function SchedulePickup() {
   const defaultMobile = storedUser?.mobile || storedUser?.phone || "";
 
   const [step, setStep] = useState(1);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [booking, setBooking] = useState(null);
@@ -170,20 +167,74 @@ function SchedulePickup() {
     );
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!validateStep()) return;
 
-    const request = {
-      ...form,
-      requestId: makeRequestId(),
-      username,
-      createdAt: new Date().toISOString(),
-      status: "submitted",
-    };
+    const token = localStorage.getItem("token");
 
-    localStorage.setItem("scrapsmart_last_pickup", JSON.stringify(request));
-    setBooking(request);
-    setStep(3);
+    if (!token) {
+      alert("Please login before scheduling a pickup.");
+      navigate("/");
+      return;
+    }
+
+    setSubmitLoading(true);
+
+    try {
+      const result = await createPickup({
+        address: form.address,
+        city: form.city,
+        pincode: form.pincode,
+        mobile: form.mobile,
+        location: form.location,
+        latitude: form.latitude,
+        longitude: form.longitude,
+        pickupDate: form.pickupDate,
+        timeSlot: form.timeSlot,
+        weightRange: form.weightRange,
+        notes: form.notes,
+      });
+
+      if (!result.success) {
+        throw new Error(result.message || "Unable to create pickup");
+      }
+
+      const savedPickup = result.pickup;
+
+      // Save latest server response locally
+      localStorage.setItem(
+        "scrapsmart_last_pickup",
+        JSON.stringify(savedPickup)
+      );
+
+      // Keep a local copy for the current frontend history
+      const existingHistory = JSON.parse(
+        localStorage.getItem("scrapSmartPickups") || "[]"
+      );
+
+      localStorage.setItem(
+        "scrapSmartPickups",
+        JSON.stringify([
+          savedPickup,
+          ...existingHistory,
+        ])
+      );
+
+      setBooking(savedPickup);
+      setStep(3);
+
+    } catch (error) {
+      console.error("Pickup submission error:", error);
+
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Unable to schedule pickup. Please try again.";
+
+      alert(message);
+    } finally {
+      setSubmitLoading(false);
+    }
   };
 
   const copyRequestId = async () => {
@@ -450,8 +501,21 @@ function SchedulePickup() {
                         <button type="button" className="ghost-btn bordered" onClick={handleBack}>
                           <ChevronLeft size={16} /> Back
                         </button>
-                        <button type="button" className="next-btn" onClick={handleConfirm}>
-                          Confirm pickup <CheckCircle2 size={16} />
+                        <button
+                          type="button"
+                          className="next-btn"
+                          onClick={handleConfirm}
+                          disabled={submitLoading}
+                        >
+                          {submitLoading ? (
+                            <>
+                              Saving pickup...
+                            </>
+                          ) : (
+                            <>
+                              Confirm pickup <CheckCircle2 size={16} />
+                            </>
+                          )}
                         </button>
                       </div>
                     )}

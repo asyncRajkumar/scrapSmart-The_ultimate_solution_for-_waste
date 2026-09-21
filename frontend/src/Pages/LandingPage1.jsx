@@ -31,6 +31,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { loginUser, registerUser } from "../api/auth";
 
 const steps = [
   {
@@ -195,32 +196,49 @@ const handleAuthSubmit = async (e) => {
 
   setAuthLoading(true);
 
-  /*
-    For now this is frontend-only.
+  try {
+    let result;
 
-    Later you can replace this with:
+    if (authMode === "signup") {
+      result = await registerUser({
+        username: authForm.username,
+        mobile: authForm.mobile,
+        email: authForm.email,
+        password: authForm.password,
+        userType: authForm.userType,
+      });
+    } else {
+      result = await loginUser({
+        email: authForm.email,
+        password: authForm.password,
+      });
+    }
 
-    axios.post(
-      "http://localhost:5000/api/auth/login",
-      authForm
-    )
+    // Save authentication data
+    localStorage.setItem("token", result.token);
+    localStorage.setItem(
+      "user",
+      JSON.stringify(result.user)
+    );
 
-    or
+    console.log("Authentication successful:", result);
 
-    axios.post(
-      "http://localhost:5000/api/auth/register",
-      authForm
-    )
-  */
+    setAuthModal(false);
 
-  setTimeout(() => {
-    setAuthLoading(false);
-
-    closeAuth();
-
-    // Redirect to landing/home section
+    // Go to dashboard
     navigate("/home");
-  }, 1200);
+
+  } catch (error) {
+    console.error("Authentication error:", error);
+
+    const message =
+      error.response?.data?.message ||
+      "Something went wrong. Please try again.";
+
+    alert(message);
+  } finally {
+    setAuthLoading(false);
+  }
 };
 
   return (

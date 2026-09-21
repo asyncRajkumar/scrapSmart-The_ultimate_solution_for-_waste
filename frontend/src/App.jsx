@@ -6,6 +6,8 @@ import SchedulePickup from './Pages/SchedulePickup';
 import CheckPrice from './Pages/CheckPrice';
 import PickupHistory from './Pages/PickupHistory';
 import HelpSupport from './Pages/HelpSupport';
+import NearbyCollectors from './Pages/NearbyCollectors';
+import Rewards from './Pages/Rewards';
 
 
 function PlaceholderPage({ title }) {
@@ -24,9 +26,9 @@ export default function App() {
         <Route path="/home" element={<UserHome />} />
         <Route path="/schedule-pickup" element={<SchedulePickup />} />
         <Route path="/check-price" element={<CheckPrice />} />
-        <Route path="/rewards" element={<PlaceholderPage title="Rewards" />} />
+        <Route path="/rewards" element={<Rewards/>} />
         <Route path="/pickup-history" element={<PickupHistory />} />
-        <Route path="/collectors" element={<PlaceholderPage title="Nearby Collectors" />} />
+        <Route path="/collectors" element={<NearbyCollectors />} />
         <Route path="/support" element={<HelpSupport />} />
         <Route path="/profile" element={<PlaceholderPage title="Profile" />} />
       </Routes>
